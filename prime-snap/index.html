@@ -203,7 +203,7 @@
       pointer-events: none;
     }
     #toast.show { opacity: 1; }
-  </style></head><body><div id="app"><div class="topbar"><div class="pill">v0.1</div><div class="pill">Best: <span id="bestScore">0</span></div><button id="topBtn" class="btn btn-ghost">Top</button></div><div class="card"><div class="rule" id="ruleLabel">Tap Start</div><div class="sub" id="statusLabel">Pick the one correct number fast.</div><div class="timer-wrap"><div class="timer" id="timerBar"></div></div><div class="choices"><button class="chip" id="c0">0</button><button class="chip" id="c1">0</button><button class="chip" id="c2">0</button></div></div><div class="footer"><button id="startBtn" class="btn btn-primary">Start</button><button id="restartBtn" class="btn hidden">Restart</button><button id="reviveBtn" class="btn btn-danger hidden">Revive</button></div></div><div class="overlay" id="lbModal"><div class="modal"><div class="row"><h3 style="margin:0;">Global Top 10</h3><button id="closeModalBtn" class="btn">Close</button></div><div style="margin: 10px 0;"><div style="font-size:13px;color:#cbd5e1;margin-bottom:6px;">Nickname</div><input id="nickInput" type="text" maxlength="20" disabled /><div style="display:flex;gap:8px;margin-top:8px;"><button id="nickChangeBtn" class="btn">Change</button><button id="nickSaveBtn" class="btn btn-primary hidden">Save</button></div></div><ul id="lbList" class="lb-list"></ul><div id="myRank" class="my-rank">My rank: -</div></div></div><div id="toast"></div><script type="module">
+  </style></head><body><div id="app"><div class="topbar"><div class="pill">v0.1</div><div class="pill">Best: <span id="bestScore">0</span></div><button id="topBtn" class="btn btn-ghost">Top</button></div><div class="card"><div class="rule" id="ruleLabel">Tap Start</div><div class="sub" id="statusLabel">Easy start: even first, harder rules later.</div><div class="timer-wrap"><div class="timer" id="timerBar"></div></div><div class="choices"><button class="chip" id="c0">0</button><button class="chip" id="c1">0</button><button class="chip" id="c2">0</button></div></div><div class="footer"><button id="startBtn" class="btn btn-primary">Start</button><button id="restartBtn" class="btn hidden">Restart</button><button id="reviveBtn" class="btn btn-danger hidden">Revive</button></div></div><div class="overlay" id="lbModal"><div class="modal"><div class="row"><h3 style="margin:0;">Global Top 10</h3><button id="closeModalBtn" class="btn">Close</button></div><div style="margin: 10px 0;"><div style="font-size:13px;color:#cbd5e1;margin-bottom:6px;">Nickname</div><input id="nickInput" type="text" maxlength="20" disabled /><div style="display:flex;gap:8px;margin-top:8px;"><button id="nickChangeBtn" class="btn">Change</button><button id="nickSaveBtn" class="btn btn-primary hidden">Save</button></div></div><ul id="lbList" class="lb-list"></ul><div id="myRank" class="my-rank">My rank: -</div></div></div><div id="toast"></div><script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
       getAuth,
@@ -254,7 +254,7 @@
       nickSaveBtn: document.getElementById("nickSaveBtn"),
       toast: document.getElementById("toast")
     };
-    const RULES = [
+    const ALL_RULES = [
       { name: "PRIME", test: (n) => isPrime(n) },
       { name: "EVEN", test: (n) => n % 2 === 0 },
       { name: "MULTIPLE OF 3", test: (n) => n % 3 === 0 }
@@ -270,7 +270,7 @@
       bestLocal: Number(localStorage.getItem("prime-snap-best") || "0"),
       startMs: 0,
       roundDeadline: 0,
-      roundDuration: 1800,
+      roundDuration: 2600,
       gameOvers: Number(localStorage.getItem("prime-snap-gameovers") || "0"),
       lastInterstitialAt: Number(localStorage.getItem("prime-snap-last-int") || "0"),
       reviveUsed: false,
@@ -357,17 +357,23 @@
       ui.reviveBtn.classList.toggle("hidden", !state.gameOver || state.reviveUsed);
     }
     function resetRoundDuration() {
-      state.roundDuration = Math.max(700, 1800 - state.score * 22);
+      state.roundDuration = Math.max(1200, 2600 - state.score * 14);
+    }
+    function getActiveRules() {
+      if (state.score < 5) return [ALL_RULES[1]];
+      if (state.score < 12) return [ALL_RULES[1], ALL_RULES[2]];
+      return ALL_RULES;
     }
     function generateRound() {
+      const rules = getActiveRules();
       let tries = 0;
       while (tries < 80) {
         tries++;
-        const rule = RULES[Math.floor(Math.random() * RULES.length)];
+        const rule = rules[Math.floor(Math.random() * rules.length)];
         const nums = [
-          Math.floor(Math.random() * 98) + 2,
-          Math.floor(Math.random() * 98) + 2,
-          Math.floor(Math.random() * 98) + 2
+          Math.floor(Math.random() * 28) + 2,
+          Math.floor(Math.random() * 28) + 2,
+          Math.floor(Math.random() * 28) + 2
         ];
         const hits = nums.map((n) => rule.test(n));
         const count = hits.filter(Boolean).length;
@@ -378,9 +384,9 @@
           return;
         }
       }
-      state.currentRule = RULES[0];
+      state.currentRule = ALL_RULES[1];
       state.options = [11, 12, 14];
-      state.correctIdx = 0;
+      state.correctIdx = 1;
     }
     function renderRound() {
       ui.rule.textContent = state.currentRule ? state.currentRule.name : "Tap Start";
